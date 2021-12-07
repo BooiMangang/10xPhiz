@@ -1,0 +1,117 @@
+import { React, useEffect, useState } from 'react';
+import './App.css';
+import CandyMachine from './CandyMachine';
+// import twitterLogo from './Assets/twitter-logo.svg';
+// import logoImage from './Assets/logoGojo.png'
+
+// Constants
+// const TWITTER_HANDLE = '_buildspace';
+// const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
+
+const App = () => {
+
+
+  const [walletAddress, setWalletAddress] = useState(null);
+
+  // Actions
+
+  /*
+  * Declare your function
+  */
+  const checkIfWalletIsConnected = async () => {
+    try {
+      const { solana } = window;
+
+      if (solana) {
+        if (solana.isPhantom) {
+          console.log('Phantom wallet found!');
+          /*
+               * The solana object gives us a function that will allow us to connect
+               * directly with the user's wallet!
+               */
+          const response = await solana.connect({ onlyIfTrusted: true });
+          console.log(
+            'Connected with Public Key:',
+            response.publicKey.toString()
+          );
+
+
+          //  Set the user's publicKey in state to be used later!
+
+          setWalletAddress(response.publicKey.toString());
+
+        }
+      } else {
+        alert('Solana object not found! Get a Phantom Wallet 👻');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const connectWallet = async () => {
+    const { solana } = window;
+
+    if (solana) {
+      const response = await solana.connect();
+      console.log('Connected with Public Key:', response.publicKey.toString());
+      setWalletAddress(response.publicKey.toString());
+    }
+  };
+
+  /*
+   * We want to render this UI when the user hasn't connected
+   * their wallet to our app yet.
+   */
+  const renderNotConnectedContainer = () => (
+    <button
+      className="cta-button connect-wallet-button"
+      onClick={connectWallet}
+    >
+      Connect to Wallet
+    </button>
+  );
+
+
+  /*
+   * When our component first mounts, let's check to see if we have a connected
+   * Phantom Wallet
+   */
+  useEffect(() => {
+    const onLoad = async () => {
+      await checkIfWalletIsConnected();
+    };
+    window.addEventListener('load', onLoad);
+    return () => window.removeEventListener('load', onLoad);
+  }, []);
+
+
+  return (
+    <div className="App">
+      <div className="container">
+        <img alt="loading" src={process.env.PUBLIC_URL + '/logoGojoED.png'} />
+        <div className="header-container">
+          <p className="header">10xPhiz NFT</p>
+          <p className="sub-text">Unique 10-BITS art NFTs</p>
+
+          <div>
+            <img alt="loading" className="gif" src={process.env.PUBLIC_URL + '/giphy.gif'} />
+          </div>
+          <div className="price"> Price : 0.08 sol</div>
+
+
+          {/* Render your connect to wallet button right here */}
+          {!walletAddress && renderNotConnectedContainer()}
+        </div>
+
+
+        {/* Check for walletAddress and then pass in walletAddress */}
+        {walletAddress && <CandyMachine walletAddress={window.solana} />}
+
+      </div>
+      <div className="footer-container"> </div>
+    </div>
+  );
+};
+
+export default App;
